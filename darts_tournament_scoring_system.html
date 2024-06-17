@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飛鏢比賽計分系統</title>
+<style>
+  body { font-family: Arial, sans-serif; }
+  .scoreboard, .player-list, .leaderboard, .details { margin-bottom: 20px; }
+  input, button, select { margin-right: 5px; }
+  .details { font-size: 0.9em; }
+</style>
+</head>
+<body>
+<h1>飛鏢比賽計分系統
+ByCopilotAI
+</h1>
+
+<div class="player-list">
+  <input type="text" id="playerNameInput" placeholder="輸入玩家名稱" />
+  <button onclick="registerPlayer()">註冊玩家</button>
+</div>
+
+<div class="scoreboard">
+  <select id="playerSelect">
+    <option selected>選擇玩家</option>
+    <!-- 玩家選項將被動態添加到這裡 -->
+  </select>
+  <input type="number" id="scoreInput" placeholder="輸入得分" />
+  <select id="multiplierSelect">
+    <option value="1" selected>單倍</option>
+    <option value="2">雙倍</option>
+    <option value="3">三倍</option>
+  </select>
+  <button onclick="addScore()">新增得分</button>
+  <button onclick="subtractScore()">減少得分</button> <!-- 新增減分按鈕 -->
+</div>
+
+<div class="leaderboard">
+  <h2>排行榜</h2>
+  <ol id="leaderboardList">
+    <!-- 排行榜將被動態添加到這裡 -->
+  </ol>
+</div>
+
+<div class="details">
+  <h2>玩家詳細分數</h2>
+  <div id="playerDetails">
+    <!-- 玩家詳細分數將被動態添加到這裡 -->
+  </div>
+</div>
+
+<!-- 新增顯示前三名得分的按鈕 -->
+<button onclick="showTopThreeScores()">顯示前三名得分</button>
+<button onclick="clearScores()">清除所有得分</button> <!-- 新增清除得分按鈕 -->
+<button onclick="clearAllPlayers()">清除所有玩家</button> <!-- 新增清除所有玩家按鈕 -->
+
+<script>
+let players = {};
+let playerScores = {};
+let historicalScores = {}; // 新增歷史得分記錄
+
+function registerPlayer() {
+  const playerName = document.getElementById('playerNameInput').value.trim();
+  if (playerName && !(playerName in players)) {
+    players[playerName] = 0;
+    playerScores[playerName] = [];
+    historicalScores[playerName] = []; // 初始化歷史得分記錄
+    const playerOption = document.createElement('option');
+    playerOption.textContent = playerName;
+    document.getElementById('playerSelect').appendChild(playerOption);
+    document.getElementById('playerNameInput').value = ''; // 清空輸入
+    updateLeaderboard();
+    updatePlayerDetails();
+  } else {
+    alert('請輸入有效的玩家名稱或玩家已存在');
+  }
+}
+
+function addScore() {
+  const selectedPlayer = document.getElementById('playerSelect').value;
+  const score = parseInt(document.getElementById('scoreInput').value);
+  const multiplier = parseInt(document.getElementById('multiplierSelect').value);
+  if (selectedPlayer !== '選擇玩家' && !isNaN(score)) {
+    const finalScore = score * multiplier;
+    players[selectedPlayer] += finalScore;
+    playerScores[selectedPlayer].push(finalScore);
+    historicalScores[selectedPlayer].push(finalScore); // 記錄到歷史得分
+    document.getElementById('scoreInput').value = ''; // 清空輸入
+    updateLeaderboard();
+    updatePlayerDetails();
+  } else {
+    alert('請選擇有效的玩家並輸入得分');
+  }
+}
+
+function subtractScore() {
+  const selectedPlayer = document.getElementById('playerSelect').value;
+  const score = parseInt(document.getElementById('scoreInput').value);
+  if (selectedPlayer !== '選擇玩家' && !isNaN(score)) {
+    players[selectedPlayer] -= score;
+    playerScores[selectedPlayer].push(-score);
+    historicalScores[selectedPlayer].push(-score); // 記錄到歷史得分
+    document.getElementById('scoreInput').value = ''; // 清空輸入
+    updateLeaderboard();
+    updatePlayerDetails();
+  } else {
+    alert('請選擇有效的玩家並輸入得分');
+  }
+}
+
+function clearScores() {
+  if (confirm('確定要清除所有得分記錄嗎？')) {
+    Object.keys(players).forEach(player => {
+      players[player] = 0;
+      playerScores[player] = [];
+    });
+    updateLeaderboard();
+    updatePlayerDetails();
+  }
+}
+
+function clearAllPlayers() {
+  if (confirm('確定要清除所有玩家嗎？')) {
+    players = {};
+    playerScores = {};
+    historicalScores = {};
+    document.getElementById('playerSelect').innerHTML = '<option selected>選擇玩家</option>';
+    document.getElementById('leaderboardList').innerHTML = '';
+    document.getElementById('playerDetails').innerHTML = '';
+  }
+}
+
+function updateLeaderboard() {
+  const sortedPlayers = Object.keys(players).sort((a, b) => players[b] - players[a]);
+  const leaderboardList = document.getElementById('leaderboardList');
+  leaderboardList.innerHTML = '';
+  sortedPlayers.forEach(player => {
+    const playerScore = document.createElement('li');
+    playerScore.textContent = `${player}: ${players[player]}`;
+    leaderboardList.appendChild(playerScore);
+  });
+}
+
+function updatePlayerDetails() {
+  const playerDetailsDiv = document.getElementById('playerDetails');
+  playerDetailsDiv.innerHTML = '';
+  Object.keys(playerScores).forEach(player => {
+    const playerDetail = document.createElement('div');
+    playerDetail.textContent = `${player}: ${playerScores[player].join(', ')}`;
+    playerDetailsDiv.appendChild(playerDetail);
+  });
+}
+
+function showTopThreeScores() {
+  const sortedPlayers = Object.keys(players).sort((a, b) => players[b] - players[a]);
+  const topThreePlayers = sortedPlayers.slice(0, 3);
+  let message = '前三名得分:\n';
+  topThreePlayers.forEach((player, index) => {
+    message += `${index + 1}. ${player}: ${players[player]}\n`;
+  });
+  alert(message);
+}
+</script>
+</body>
+</html>
